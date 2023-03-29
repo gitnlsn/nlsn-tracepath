@@ -11,6 +11,7 @@ import {
 import { generatePrintableTracepathReads } from "./utils/generatePrintableTracepathReads"
 import { generateExpectionReadsReport } from "./utils/generateExpectionReadsReport"
 import { generateStatsReport } from "./utils/generateStatsReport"
+import { generatePrintableTracepathResult } from "./utils/generatePrintableTracepathResult"
 
 const promissedExec = promisify(exec)
 
@@ -122,8 +123,8 @@ export const handleCommandLine = async () => {
     console.log(generateExpectionReadsReport(expectionReads))
   }
 
-  if (printTracepathResult) {
-    console.log(JSON.stringify(tracepathResult, null, 2))
+  if (printTracepathResult && tracepathResult) {
+    console.log(generatePrintableTracepathResult(tracepathResult))
   }
 }
 
