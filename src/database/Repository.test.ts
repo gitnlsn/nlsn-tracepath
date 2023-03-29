@@ -22,6 +22,7 @@ describe("Repository", () => {
         {
           hop: 1,
           ip: "192.168.1.1",
+          rtt: 1.1,
           raw: "",
         },
       ] as TracepathResult
@@ -33,16 +34,19 @@ describe("Repository", () => {
         expect.objectContaining(tracepathResult[0])
       )
     })
+
     it("should insert multiple hop result", async () => {
       const tracepathResult = [
         {
           hop: 1,
           ip: "192.168.1.1",
+          rtt: 1.1,
           raw: "",
         },
         {
           hop: 2,
           ip: "192.168.1.2",
+          rtt: 1.2,
           raw: "",
         },
       ] as TracepathResult

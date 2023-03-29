@@ -38,6 +38,7 @@ export class Repository {
   async getHopsStats() {
     return this.prisma.tracepathHop.groupBy({
       _count: true,
+      _avg: { rtt: true },
       by: ["ip", "hop"],
       orderBy: {
         hop: "asc",

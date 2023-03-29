@@ -14,6 +14,7 @@ model TracepathHop {
   id  String @id @default(uuid())
   hop Int
   ip  String
+  rtt Float
   raw String
 
   TracepathRead   TracepathRead? @relation(fields: [tracepathReadId], references: [id])

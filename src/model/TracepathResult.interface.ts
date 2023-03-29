@@ -4,6 +4,7 @@ import { parseTracepathResult } from "./parseTracepathResult"
 export const ZSchemaTracepathHop = z.object({
   hop: z.number(),
   ip: z.string().ip(),
+  rtt: z.number(),
   raw: z.string(),
 })
 export type TracepathHop = z.infer<typeof ZSchemaTracepathHop>

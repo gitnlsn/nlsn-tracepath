@@ -2,7 +2,7 @@ import { HopStats } from "../database/Repository.interface"
 
 type GroupedStatsByHop = Array<{
   hop: number
-  ips: Array<{ ip: string; count: number }>
+  ips: Array<{ ip: string; count: number; avg: number | null }>
 }>
 
 export const generateStatsReport = (stats: HopStats): string =>
@@ -18,7 +18,7 @@ export const generateStatsReport = (stats: HopStats): string =>
           ...acc,
           {
             hop: next.hop,
-            ips: [{ ip: next.ip, count: next._count }],
+            ips: [{ ip: next.ip, count: next._count, avg: next._avg.rtt }],
           },
         ]
       }
@@ -27,7 +27,10 @@ export const generateStatsReport = (stats: HopStats): string =>
         if (index === existingGroupIndex) {
           return {
             ...existingGroup,
-            ips: [...existingGroup.ips, { ip: next.ip, count: next._count }],
+            ips: [
+              ...existingGroup.ips,
+              { ip: next.ip, count: next._count, avg: next._avg.rtt },
+            ],
           }
         }
 
@@ -36,11 +39,10 @@ export const generateStatsReport = (stats: HopStats): string =>
     }, [])
     .map<string>(({ hop, ips }) => {
       const ipsString = ips
-        .map<string>(
-          ({ ip, count }) =>
-            // line formated as:
-            // \t192.168.1.1 (400)
-            `\t${ip} (${count})`
+        .map<string>(({ ip, count, avg }) =>
+          // line formated as:
+          // \t192.168.1.1 (400)
+          avg ? `\t${ip} (${count}, avg=${avg.toFixed(3)})` : `\t${ip} (${count}`
         )
         .reduce<string>((acc, next, index) => {
           if (index === 0) {

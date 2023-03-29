@@ -77,9 +77,10 @@ export const handleCommandLine = async () => {
 
     const prismaUrl = options["postgresUrlPath"]
 
-    const limit = Number.isFinite(Number(options["readDatabase"]))
-      ? Number(options["readDatabase"])
-      : undefined
+    const limit =
+      Number(options["readDatabase"]) !== 0
+        ? Number(options["readDatabase"])
+        : undefined
 
     const prisma = new PrismaClient({ datasources: { db: { url: prismaUrl } } })
     const repository = Repository.create({ prisma })
@@ -108,9 +109,10 @@ export const handleCommandLine = async () => {
       throw new Error("Missing postgres url path")
     }
 
-    const limit = Number.isFinite(Number(options["expectionReads"]))
-      ? Number(options["expectionReads"])
-      : undefined
+    const limit =
+      Number(options["expectionReads"]) !== 0
+        ? Number(options["expectionReads"])
+        : undefined
 
     const prismaUrl = options["postgresUrlPath"]
     const prisma = new PrismaClient({ datasources: { db: { url: prismaUrl } } })
