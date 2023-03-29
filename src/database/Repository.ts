@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { endOfDay, startOfDay } from "date-fns"
 import { TracepathResult } from "../model/TracepathResult.interface"
-import { GetReadsProps } from "./Repository.interface"
 
 export interface RepositoryProps {
   prisma: PrismaClient
@@ -29,33 +27,63 @@ export class Repository {
     })
   }
 
-  async getTracepathReads({ at, since, before }: GetReadsProps) {
-    if (at) {
-      return this.prisma.tracepathRead.findMany({
-        where: {
-          createdAt: { gte: startOfDay(at), lte: endOfDay(at) },
-        },
-        include: {
-          hops: true,
-        },
-      })
-    }
-
-    if (before || since) {
-      return this.prisma.tracepathRead.findMany({
-        where: {
-          createdAt: { gte: since, lte: before },
-        },
-        include: {
-          hops: true,
-        },
-      })
-    }
-
+  async getTracepathReads(limit = 3) {
     return this.prisma.tracepathRead.findMany({
-      include: {
-        hops: true,
+      include: { hops: true },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    })
+  }
+
+  async getHopsStats() {
+    return this.prisma.tracepathHop.groupBy({
+      _count: true,
+      by: ["ip", "hop"],
+      orderBy: {
+        hop: "asc",
       },
+    })
+  }
+
+  async getExpectionTracepathReads(limit = 3) {
+    return this.prisma.$transaction(async (transaction) => {
+      const readsWith3PoinstAtHop1 = await transaction.tracepathHop.groupBy({
+        _count: true,
+        by: ["tracepathReadId"],
+        where: {
+          hop: { equals: 1 },
+        },
+      })
+
+      const readsWithRouterAtHop2 = await transaction.tracepathHop.groupBy({
+        by: ["tracepathReadId"],
+        where: {
+          AND: {
+            hop: { gt: 1 },
+            ip: { equals: "192.168.1.1" },
+          },
+        },
+      })
+
+      const excepctionReads = [
+        ...readsWith3PoinstAtHop1
+          .filter((read) => read._count > 2)
+          .map((read) => read.tracepathReadId),
+        ...readsWithRouterAtHop2.map((read) => read.tracepathReadId),
+      ]
+
+      return transaction.tracepathRead.findMany({
+        where: {
+          id: {
+            in: excepctionReads,
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        include: {
+          hops: true,
+        },
+        take: limit,
+      })
     })
   }
 }

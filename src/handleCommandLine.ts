@@ -8,7 +8,9 @@ import {
   TracepathResult,
   TracepathResultParser,
 } from "./model/TracepathResult.interface"
-import { generatePrintableTracepathReads } from "./utils/printTracepathReads"
+import { generatePrintableTracepathReads } from "./utils/generatePrintableTracepathReads"
+import { generateExpectionReadsReport } from "./utils/generateExpectionReadsReport"
+import { generateStatsReport } from "./utils/generateStatsReport"
 
 const promissedExec = promisify(exec)
 
@@ -19,7 +21,9 @@ export const handleCommandLine = async () => {
     "-c, --countHops": "",
     "-p, --postgresUrlPath": "[url]",
     "-i, --insertDatabase": "",
-    "-r, --readDatabase": "[Date]",
+    "-r, --readDatabase": "[last n reads]",
+    "-s, --hopStats": "",
+    "-e, --expectionReads": "[last n reads]",
   })
 
   let tracepathResult: TracepathResult | undefined = undefined
@@ -73,15 +77,47 @@ export const handleCommandLine = async () => {
 
     const prismaUrl = options["postgresUrlPath"]
 
-    const tracepathDate = options["readDatabase"]
+    const limit = Number.isFinite(Number(options["readDatabase"]))
+      ? Number(options["readDatabase"])
+      : undefined
 
     const prisma = new PrismaClient({ datasources: { db: { url: prismaUrl } } })
     const repository = Repository.create({ prisma })
-    const insertedTracepathReads = await repository.getTracepathReads({
-      at: tracepathDate,
-    })
+    const insertedTracepathReads = await repository.getTracepathReads(limit)
 
     console.log(generatePrintableTracepathReads(insertedTracepathReads))
+    printTracepathResult = false
+  }
+
+  if (hasKey(options, "hopStats")) {
+    if (!hasKey(options, "postgresUrlPath")) {
+      throw new Error("Missing postgres url path")
+    }
+
+    const prismaUrl = options["postgresUrlPath"]
+
+    const prisma = new PrismaClient({ datasources: { db: { url: prismaUrl } } })
+    const repository = Repository.create({ prisma })
+    const stats = await repository.getHopsStats()
+
+    console.log(generateStatsReport(stats))
+  }
+
+  if (hasKey(options, "expectionReads")) {
+    if (!hasKey(options, "postgresUrlPath")) {
+      throw new Error("Missing postgres url path")
+    }
+
+    const limit = Number.isFinite(Number(options["expectionReads"]))
+      ? Number(options["expectionReads"])
+      : undefined
+
+    const prismaUrl = options["postgresUrlPath"]
+    const prisma = new PrismaClient({ datasources: { db: { url: prismaUrl } } })
+    const repository = Repository.create({ prisma })
+    const expectionReads = await repository.getExpectionTracepathReads(limit)
+
+    console.log(generateExpectionReadsReport(expectionReads))
   }
 
   if (printTracepathResult) {

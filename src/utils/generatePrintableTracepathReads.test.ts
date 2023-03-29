@@ -1,5 +1,5 @@
 import { TracepathReads } from "../database/Repository.interface"
-import { generatePrintableTracepathReads } from "./printTracepathReads"
+import { generatePrintableTracepathReads } from "./generatePrintableTracepathReads"
 
 describe("generatePrintableTracepathReads", () => {
   it.each([

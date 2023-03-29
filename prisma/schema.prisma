@@ -17,7 +17,7 @@ model TracepathHop {
   raw String
 
   TracepathRead   TracepathRead? @relation(fields: [tracepathReadId], references: [id])
-  tracepathReadId String?
+  tracepathReadId String
 }
 
 model TracepathRead {
